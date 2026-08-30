@@ -1,10 +1,7 @@
 # Retrieval Spec
 
-Sample — edit it. Three decisions in here are still open and marked **DECIDE**.
-They are yours to settle, and the reasoning under each is what you will defend
-on Monday.
 
-Depends on: `docs/ingestion-spec.md`. Reads the collection that spec creates.
+Depends on: `specs/ingestion-spec.md`. Reads the collection that spec creates.
 Does not create, modify or re-embed anything.
 
 ---
@@ -58,36 +55,29 @@ optional and not for debugging only — it is an acceptance criterion.
 ## Scoring
 
 Chroma returns a **distance**, where lower means more similar. That is the
-opposite of the intuitive reading of a "relevance score", and mixing the two up
-is an easy silent bug: a similarity floor written for one convention rejects
+opposite of the intuitive reading of a "relevance score".
+
+**Decision:** convert distance to a similarity where higher is better, so `score`
+reads intuitively and the floor is a lower bound rather than an upper one.
+
+State this convention in the `query` docstring and apply it consistently in query
+results, the run record, and the similarity floor. Distance in one place and
+similarity in another is a silent bug: a floor written for one convention rejects
 exactly the wrong chunks under the other.
-
-**DECIDE:** return Chroma's raw distance, or convert to a similarity where higher
-is better.
-
-Whichever you pick, state it in the docstring and use the same convention in the
-run record and in any threshold. Do not have distance in one place and similarity
-in another.
 
 ---
 
 ## Default k
 
-**DECIDE:** the default value of `k`.
-
 The corpus has 20 chunks, so k is a large fraction of the whole collection.
 
-- **k=5** — the default in the interface above. Tight. Risks missing a third
-  relevant document on multi-document questions. Q7 needs B3, B4 *and* A4;
-  Q10 needs C5, B2 *and* C4.
-- **k=8** — more headroom for multi-document questions, at the cost of feeding
-  more irrelevant text to the reasoner. At 20 chunks total, k=8 is 40% of the
-  corpus.
+More chunks means the right one is more likely present, and the reasoner is more
+likely distracted by a near-miss. D5 (telematics) is the deliberate distractor —
+if it starts appearing in results, k is too high or the query is too vague.
 
-Note what k interacts with: the more chunks you return, the more likely the
-right one is present, and the more likely the reasoner is distracted by a
-near-miss. D5 (telematics) is the deliberate distractor — if it starts appearing
-in results, k is too high or the query is too vague.
+**Decision:** k = 5. Raise it only if a done-criterion fails because a third
+relevant document was cut off. Q7 needs B3, B4 and A4; Q10 needs C5, B2 and C4.
+A failure there would be evidence to raise k, rather than a guess.
 
 ---
 
@@ -97,40 +87,34 @@ Vector search has no concept of "no result". It returns nearest neighbours
 regardless of whether anything is actually close. Ask about diminished value —
 which appears nowhere in the corpus — and it will still return five chunks.
 
-A floor is therefore required for Q3. Chunks that do not clear it are dropped;
-if nothing clears it, `query` returns an empty list and the caller reports
+A floor is therefore required for Q3. Chunks that do not clear it are dropped; if
+nothing clears it, `query` returns an empty list and the caller reports
 insufficient retrieval rather than reasoning over noise.
 
-**DECIDE:** the threshold value.
+**Decision:** placeholder `0.0` (no filtering) for the first build. The threshold
+cannot be reasoned to — it must be measured against this corpus and this
+embedding function.
 
-This cannot be set from first principles. Set it empirically:
+Procedure once retrieval runs:
 
 1. Run the Q3 question ("after my car is repaired, do you pay me for the lost
    resale value?") and record the best score.
 2. Run Q2 and Q10 and record their best scores.
-3. Put the floor between them, closer to the Q3 end.
+3. Set the floor between them, closer to the Q3 end.
 
-Record the observed numbers in this file when you set it. A threshold with no
-recorded basis is a magic number, and future-you will not know whether it can be
-changed.
+Record the observed scores here when the floor is set. A threshold with no
+recorded basis is a magic number, and future-you will not know whether it is safe
+to change.
 
----
+### Observed scores
 
-## Filters
+| Question | Best score | Notes |
+|---|---|---|
+| Q3 diminished value | | |
+| Q2 rental rate | | |
+| Q10 hailstorm CAT | | |
 
-`filters` maps to Chroma's metadata `where` clause. Supported keys are the five
-ingestion fields: `doc_id`, `title`, `effective_date`, `authority_tier`, `form`.
-
-Not needed for the three build targets — Q2, Q10 and Q3 all work on unfiltered
-search. Filtering is what Q6 needs, where A1 and A2 are near-duplicates and the
-`form` field is what separates them.
-
-**Build the parameter now, use it later.** Threading it through afterwards means
-touching the reasoning layer as well.
-
-Caution: filtering narrows *before* ranking. A wrong filter removes the correct
-document entirely and the failure looks like a retrieval miss, not a filter bug.
-Log the filter applied in the run record so this is visible.
+**Floor set to:** _(pending measurement)_
 
 ---
 
