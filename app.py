@@ -52,7 +52,7 @@ def check_password() -> bool:
         return True
 
     # Show password prompt (before any other content)
-    st.title("Acme Auto Insurance Policy Agent")
+    st.title("Auto Insurance Policy Agent")
     st.write("This is a demonstration deployment. Please enter the access password.")
 
     password = st.text_input("Password", type="password", key="password_input")
@@ -357,10 +357,18 @@ def main():
     # Initialize session state
     init_session_state()
 
-    st.title("Acme Auto Insurance Policy Agent")
+    st.title("Auto Insurance Policy Agent")
+
+    st.write("This is an agentic AI system that answers questions using the documents listed below, "
+             "with specialised agents handling the reasoning.")
+    st.write("Note that the corpus is synthetic test data, not real insurance guidance.")
+    st.write("")
 
     # Session info sidebar (deployment mode only)
     render_session_info()
+
+    # Corpus used by this app
+    st.subheader("Corpus used by this app")
 
     # Corpus status
     render_corpus_status()
