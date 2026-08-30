@@ -124,6 +124,11 @@ Three questions must work correctly (see `reference/QUESTIONS-AND-TRACES.md`):
 
 ### Testing
 ```bash
+# Unit tests (ingestion and retrieval specs)
+pytest tests/ -v                    # Run all tests
+pytest tests/test_ingestion.py -v  # Ingestion done-criteria only
+pytest tests/test_retrieval.py -v  # Retrieval done-criteria only
+
 # Connectivity test
 python test_bedrock.py
 
@@ -151,7 +156,7 @@ python -c "from src.agents import run_pipeline; answer = run_pipeline('We had a 
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
-# Installs: streamlit, boto3, chromadb
+# Installs: streamlit, boto3, chromadb, pytest
 ```
 
 ### ChromaDB operations
@@ -176,7 +181,10 @@ specs/              Implementation specifications
   retrieval-spec.md Query interface, scoring, failure signals
 docs/
   dev-setup/        Original development environment runbooks (Windows/WSL/VS Code)
-src/                Implementation (empty — to be built)
+src/                Implementation
+tests/              Unit tests for ingestion and retrieval specs
+  test_ingestion.py Tests for chunking, metadata extraction
+  test_retrieval.py Tests for document retrieval, scoring
 test_bedrock.py     AWS Bedrock connectivity test
 ```
 
