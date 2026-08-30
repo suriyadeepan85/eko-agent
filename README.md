@@ -1,3 +1,6 @@
+> **Try it now:** https://eko-auto-claims-agent.streamlit.app/ — password `demo`  
+> **No account needed:** browse `evidence/` for run records from every evaluation question, each with the full reasoning trace.
+
 # Enterprise Knowledge Ops Agent
 
 A production-grade retrieval-augmented generation (RAG) system demonstrating multi-agent orchestration, precedence-based reasoning, and grounding enforcement over a deliberately adversarial synthetic corpus.
@@ -30,8 +33,8 @@ There are three ways to evaluate this project, in order of increasing setup:
 
 ### 2. Use the Hosted Demo (No setup required)
 
-**URL:** [Streamlit app URL to be added]  
-**Password:** [Password to be added]
+**URL:** https://eko-auto-claims-agent.streamlit.app/  
+**Password:** demo
 
 The hosted demo is limited to 30 questions per session and will be taken down after evaluation concludes.
 
