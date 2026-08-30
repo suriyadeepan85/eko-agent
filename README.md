@@ -16,6 +16,34 @@ This system answers questions about insurance claims procedures by:
 
 The corpus contains **6 deliberate traps** (version conflicts, supersessions, near-duplicates, unanswerable questions) to ensure the system handles edge cases correctly.
 
+## How to Evaluate This
+
+There are three ways to evaluate this project, in order of increasing setup:
+
+### 1. Read the Committed Evidence (No setup required)
+
+`evidence/` holds run records from every evaluation question, each with the full trace: the plan, retrieved documents with relevance scores, reasoning attempts, validation verdicts, and which document won when sources conflicted. `evidence/README.md` explains what each run was testing.
+
+`evidence/baseline/` holds the same questions run through single-pass RAG (`src/baseline.py`) for comparison.
+
+**This path requires nothing at all** — no AWS account, no installation, no configuration.
+
+### 2. Use the Hosted Demo (No setup required)
+
+**URL:** [Streamlit app URL to be added]  
+**Password:** [Password to be added]
+
+The hosted demo is limited to 30 questions per session and will be taken down after evaluation concludes.
+
+### 3. Run It Locally (Requires AWS account with Bedrock access)
+
+See the **Setup** section below for installation and configuration. This path requires:
+- AWS account with Bedrock model access for Claude Sonnet 4.5
+- AWS CLI v2 configured
+- Python 3.11+
+
+Without Bedrock access, use paths 1 or 2 above instead.
+
 ## Architecture
 
 ### Five Agents + Orchestrator
@@ -139,50 +167,59 @@ From `reference/CORPUS-MAP.md`:
 
 ## Setup
 
-**Prerequisites:**
-- Python 3.11+
-- AWS account with Bedrock access (Claude Sonnet 4.5)
-- AWS credentials configured (via `~/.aws/credentials`, environment variables, or IAM role)
+**Prerequisite:** An AWS account with Bedrock model access for Claude Sonnet 4.5. Without it, nothing in this section will work. See "How to Evaluate This" above for alternatives that require no AWS access.
 
-**Quick Setup:**
+### Installation Steps
+
+**1. Clone the repository**
 ```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate
+git clone <repository-url>
+cd eko-agent
+```
 
-# Install dependencies
+**2. Create and activate virtual environment**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+**3. Install dependencies**
+```bash
 pip install -r requirements.txt
-
-# Set environment variables (optional - defaults to us-east-1 and Claude Sonnet 4.5)
-export AWS_REGION=us-east-1
-export ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
-
-# Test connectivity
-python test_bedrock.py
 ```
 
-**Alternative:** See [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md) for the original development environment setup with automated script (Windows/WSL/VS Code/Claude Code) - reference only.
+**4. Configure AWS credentials**
 
-## Quick Start for Evaluators
-
-**After completing setup** (see [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md) for details):
-
-### 1. Load environment
+Use `aws configure` for standard credentials:
 ```bash
-# Load Bedrock environment variables (if not in a fresh terminal)
-source ~/.bashrc
-
-# Activate Python virtual environment
-source .venv/bin/activate
+aws configure
+# Enter: Access Key ID, Secret Access Key, Default region, Output format
 ```
 
-### 2. Verify connectivity
+Or `aws configure sso` if your organization uses IAM Identity Center (requires AWS CLI v2):
+```bash
+aws configure sso
+# Follow SSO setup prompts
+```
+
+**5. Set region and model**
+
+Set `AWS_REGION` to a region where Claude is available in your account. Model availability varies by account and region — check the Bedrock console to confirm access.
+
+```bash
+export AWS_REGION=us-east-1  # or your region
+export ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0  # optional - this is the default
+```
+
+**Model used during development:** `us.anthropic.claude-sonnet-4-5-20250929-v1:0` in `us-east-1`. Availability varies by account and region.
+
+**6. Test connectivity**
 ```bash
 python test_bedrock.py
 # Expected output: A response from Claude and a token count
 ```
 
-### 3. Ingest corpus (one-time)
+**7. Ingest the corpus (one-time)**
 ```bash
 python -c "from src.ingestion import ingest; count = ingest('documents/'); print(f'Stored {count} chunks')"
 # Expected output: Stored 20 chunks
@@ -193,35 +230,68 @@ python -c "from src.ingestion import ingest; count = ingest('documents/'); print
 rm -rf chroma_db/
 ```
 
-### 4. Test the system with gate questions
+See [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md) for the original development environment setup with automated script (Windows/WSL/VS Code/Claude Code) — reference only.
+
+## Running It
+
+### Web App
+
+```bash
+streamlit run app.py
+```
+
+Opens browser at http://localhost:8501
+
+**What you'll see:**
+- Corpus status (20 documents, loads automatically on first run)
+- Question input with three example questions (Q2, Q3, Q10) as one-click buttons
+- Full reasoning trace beneath each answer:
+  - Plan (decomposition into sub-questions)
+  - Retrievals (scores, effective dates, authority tiers)
+  - Attempts (drafts and validation verdicts)
+  - Precedence rules (which document won and why)
+  - Failures (if any)
+
+The corpus loads automatically on first run. Each question creates a full audit trail in `runs/`.
+
+### Command Line
+
+```python
+from src.agents import run_pipeline
+
+record = run_pipeline("How many days of rental am I covered for and at what rate?")
+print(record.answer)
+```
+
+`run_pipeline()` returns a `RunRecord` object:
+- `.answer` — the final answer string
+- `.to_dict()` — complete trace data (plan, retrievals, attempts, precedence, failures)
+
+Every run writes a full JSON record to `runs/` for audit trails.
+
+**Gate test questions:**
 
 **Q2 — Tests precedence** (should return $45/day from D4, not $30 from C3):
 ```bash
 python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?').answer)"
 ```
 
-**Q3 — Tests hallucination control** (should refuse with informative message - no corpus answer):
+**Q3 — Tests hallucination control** (should refuse with informative message):
 ```bash
 python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?').answer)"
 ```
 
-**Q10 — Tests reasoning** (should conclude 200 < 250, no CAT procedures triggered):
+**Q10 — Tests reasoning** (should conclude 200 < 250, no CAT procedures):
 ```bash
 python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?').answer)"
 ```
 
-### 5. Check audit trails
-```bash
-ls runs/  # Should show JSON run records from your test queries
-cat evidence/README.md  # Shows execution statistics from 22 baseline runs
-```
-
 **Expected results:**
-- **Q2**: Answer mentions "$45 per day" and "30 days", cites D4 and C3, applies precedence
+- **Q2**: "$45 per day" and "30 days", cites D4 and C3, applies `later_effective_date` precedence
 - **Q3**: Refuses to answer, lists what was searched and retrieved, no fabrication
-- **Q10**: Concludes "does not trigger catastrophe procedures" with arithmetic reasoning
+- **Q10**: "Does not trigger catastrophe procedures" with arithmetic reasoning (200 < 250)
 
-See `evidence/README.md` for detailed expected outputs.
+See `evidence/README.md` for detailed expected outputs and execution statistics.
 
 ## Usage
 
