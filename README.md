@@ -272,21 +272,32 @@ Per `specs/ui-spec.md`, this is **display work only** - no LLM calls, no logic, 
 
 **Deployment to Streamlit Cloud:**
 
-The app supports deployment to Streamlit Cloud with AWS credentials configured via secrets:
+The app supports deployment to Streamlit Cloud with AWS credentials and access controls:
 
-1. Deploy app to Streamlit Cloud (connect GitHub repo)
-2. In App settings → Secrets, paste:
+1. **Create dedicated IAM user** (see `specs/deployment-spec.md` for detailed policy)
+   - Name: `eko-streamlit-demo`
+   - Permissions: `bedrock:InvokeModel` only for Claude Sonnet 4.5
+   - Create access key for this user
+
+2. **Deploy app** to Streamlit Cloud (connect GitHub repo, select `app.py`)
+
+3. **Configure secrets** in App settings → Secrets:
    ```toml
-   AWS_ACCESS_KEY_ID = "your-access-key-id"
-   AWS_SECRET_ACCESS_KEY = "your-secret-access-key"
+   AWS_ACCESS_KEY_ID = "dedicated-iam-user-key"
+   AWS_SECRET_ACCESS_KEY = "dedicated-iam-user-secret"
    AWS_REGION = "us-east-1"
    BEDROCK_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+   APP_PASSWORD = "your-shared-password"
    ```
-3. Save and redeploy
+
+4. **Deployment features** (enabled when `APP_PASSWORD` is set):
+   - Password gate: Shared password required before accessing app
+   - 30-question session cap: Prevents unbounded AWS costs
+   - Exit button: Resets session count in sidebar
 
 See `.streamlit/secrets.toml.example` for template.
 
-**Local development:** Works with AWS credential chain (IAM roles, `~/.aws/credentials`, environment variables) - no secrets.toml needed.
+**Local development:** Works with AWS credential chain (IAM roles, `~/.aws/credentials`, environment variables). No secrets.toml needed. Password gate and session cap are automatically disabled.
 
 ### Baseline RAG (Comparison)
 

@@ -4,6 +4,9 @@ Streamlit UI for the Enterprise Knowledge Ops Agent.
 Displays multi-agent coordination trace: plan, retrievals, precedence rules,
 attempts, and failures. Per specs/ui-spec.md, this is display work only -
 no LLM calls, no logic, just rendering what the orchestrator produces.
+
+Includes password gate and 30-question session cap per specs/deployment-spec.md
+when deployed to Streamlit Cloud (both features are skipped for local development).
 """
 
 import streamlit as st
@@ -11,6 +14,105 @@ import os
 from src import ingestion, storage
 from src.agents import orchestrator
 from chromadb.errors import NotFoundError
+
+# Deployment settings
+SESSION_QUESTION_CAP = 30
+
+
+# --- DEPLOYMENT FEATURES (PASSWORD GATE & SESSION CAP) ---
+
+def is_deployment_mode() -> bool:
+    """Check if running in deployment mode (Streamlit Cloud with password).
+
+    Returns True if APP_PASSWORD exists in secrets, False otherwise.
+    Local development has no APP_PASSWORD, so features are skipped.
+    """
+    try:
+        return 'APP_PASSWORD' in st.secrets
+    except Exception:
+        return False
+
+
+def check_password() -> bool:
+    """Password gate for deployed app.
+
+    Returns True if authenticated or if APP_PASSWORD not set (local dev).
+    Shows password prompt and returns False if not authenticated.
+    """
+    if not is_deployment_mode():
+        # Local development - no password needed
+        return True
+
+    # Initialize session state for password
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+
+    # Already authenticated
+    if st.session_state.authenticated:
+        return True
+
+    # Show password prompt (before any other content)
+    st.title("Acme Auto Insurance Policy Agent")
+    st.write("This is a demonstration deployment. Please enter the access password.")
+
+    password = st.text_input("Password", type="password", key="password_input")
+
+    if st.button("Access", key="password_submit"):
+        if password == st.secrets['APP_PASSWORD']:
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Incorrect password. Please try again.")
+
+    return False
+
+
+def init_session_state():
+    """Initialize session state for question counting."""
+    if 'question_count' not in st.session_state:
+        st.session_state.question_count = 0
+
+
+def increment_question_count():
+    """Increment question count and check cap."""
+    st.session_state.question_count += 1
+
+
+def is_cap_reached() -> bool:
+    """Check if session question cap is reached."""
+    if not is_deployment_mode():
+        # Local development - no cap
+        return False
+    return st.session_state.question_count >= SESSION_QUESTION_CAP
+
+
+def render_session_info():
+    """Display session info and exit button (deployment mode only)."""
+    if not is_deployment_mode():
+        return
+
+    remaining = SESSION_QUESTION_CAP - st.session_state.question_count
+
+    # Show in sidebar
+    with st.sidebar:
+        st.write("### Session Info")
+        st.write(f"Questions asked: {st.session_state.question_count}/{SESSION_QUESTION_CAP}")
+
+        if is_cap_reached():
+            st.warning("Question limit reached for this session.")
+        else:
+            st.info(f"{remaining} questions remaining")
+
+        if st.button("Exit Session", key="exit_session"):
+            # Reset session state
+            st.session_state.authenticated = False
+            st.session_state.question_count = 0
+            st.rerun()
+
+        st.write("---")
+        st.caption("💡 This is a hosted demo running on personal AWS credits. "
+                   "The 30-question cap prevents unbounded spend. "
+                   "Click 'Exit Session' to restart your count.")
 
 
 # --- CORPUS MANAGEMENT ---
@@ -72,12 +174,23 @@ def render_corpus_status():
 def render_question_input() -> str | None:
     """Render question input with example buttons."""
     is_loaded, _ = check_corpus_loaded()
+    cap_reached = is_cap_reached()
 
-    # Text input (disabled until corpus loaded)
+    # Show cap message if reached
+    if cap_reached:
+        st.error(f"**Session limit reached:** You've asked {SESSION_QUESTION_CAP} questions in this session. "
+                 "Click 'Exit Session' in the sidebar to start a new session.")
+
+    # Text input (disabled until corpus loaded OR if cap reached)
+    input_disabled = not is_loaded or cap_reached
+    placeholder = ("Loading corpus..." if not is_loaded
+                  else "Session limit reached" if cap_reached
+                  else "Enter your question...")
+
     question = st.text_input(
         "Ask a question about your policy:",
-        disabled=not is_loaded,
-        placeholder="Enter your question..." if is_loaded else "Loading corpus..."
+        disabled=input_disabled,
+        placeholder=placeholder
     )
 
     # Example buttons (vertical layout with full question text)
@@ -91,7 +204,7 @@ def render_question_input() -> str | None:
 
     # Button handling with session state (vertical layout, full text)
     for ex in examples:
-        if st.button(ex, disabled=not is_loaded, use_container_width=True):
+        if st.button(ex, disabled=input_disabled, use_container_width=True):
             st.session_state.selected_question = ex
             st.rerun()
 
@@ -236,7 +349,18 @@ def render_failures(failures: list):
 
 def main():
     st.set_page_config(page_title="Acme Auto Insurance Agent", layout="wide")
+
+    # Password gate (deployment mode only) - must be first
+    if not check_password():
+        return
+
+    # Initialize session state
+    init_session_state()
+
     st.title("Acme Auto Insurance Policy Agent")
+
+    # Session info sidebar (deployment mode only)
+    render_session_info()
 
     # Corpus status
     render_corpus_status()
@@ -246,6 +370,10 @@ def main():
 
     # Process and display
     if question:
+        # Increment question count (deployment mode only)
+        if is_deployment_mode():
+            increment_question_count()
+
         with st.spinner("Processing question..."):
             record = orchestrator.run_pipeline(question)
 
