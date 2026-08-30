@@ -87,7 +87,7 @@ def is_cap_reached() -> bool:
 
 
 def render_session_info():
-    """Display session info and exit button (deployment mode only)."""
+    """Display session info in sidebar (deployment mode only)."""
     if not is_deployment_mode():
         return
 
@@ -102,12 +102,6 @@ def render_session_info():
             st.warning("Question limit reached for this session.")
         else:
             st.info(f"{remaining} questions remaining")
-
-        if st.button("Exit Session", key="exit_session"):
-            # Reset session state
-            st.session_state.authenticated = False
-            st.session_state.question_count = 0
-            st.rerun()
 
         st.write("---")
         st.caption("💡 This is a hosted demo running on personal AWS credits. "
@@ -179,7 +173,7 @@ def render_question_input() -> str | None:
     # Show cap message if reached
     if cap_reached:
         st.error(f"**Session limit reached:** You've asked {SESSION_QUESTION_CAP} questions in this session. "
-                 "Click 'Exit Session' in the sidebar to start a new session.")
+                 "Click 'Exit Session' below to start a new session.")
 
     # Text input (disabled until corpus loaded OR if cap reached)
     input_disabled = not is_loaded or cap_reached
@@ -206,6 +200,16 @@ def render_question_input() -> str | None:
     for ex in examples:
         if st.button(ex, disabled=input_disabled, use_container_width=True):
             st.session_state.selected_question = ex
+            st.rerun()
+
+    # Exit Session button (deployment mode only) - styled to match input label
+    if is_deployment_mode():
+        st.write("")
+        st.markdown("**Exit Session:**")
+        if st.button("Reset session count", key="exit_session", use_container_width=True):
+            # Reset session state
+            st.session_state.authenticated = False
+            st.session_state.question_count = 0
             st.rerun()
 
     # Return selected or typed question
