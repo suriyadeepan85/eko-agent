@@ -140,7 +140,7 @@ From `reference/CORPUS-MAP.md`:
 ## Setup
 
 **Prerequisites:**
-- Python 3.14+
+- Python 3.11+
 - AWS account with Bedrock access (Claude Sonnet 4.5)
 - WSL Ubuntu (if on Windows)
 
@@ -150,21 +150,76 @@ From `reference/CORPUS-MAP.md`:
 - Python environment setup
 - Automated script: `docs/setup.sh`
 
-**Quick setup:**
+**First-time setup:**
 ```bash
 # From project root
 chmod +x docs/setup.sh
 ./docs/setup.sh
 
-# Activate environment
-source .venv/bin/activate
-
-# Test connectivity
-python test_bedrock.py
-
-# Ingest corpus (20 documents)
-python -c "from src.ingestion import ingest; count = ingest('documents/'); print(f'Stored {count} chunks')"
+# The script creates .venv/ and sets environment variables in ~/.bashrc
+# Open a new terminal OR reload the shell:
+source ~/.bashrc
 ```
+
+## Quick Start for Evaluators
+
+**After completing setup** (see [docs/SETUP.md](docs/SETUP.md)):
+
+### 1. Load environment
+```bash
+# Load Bedrock environment variables (if not in a fresh terminal)
+source ~/.bashrc
+
+# Activate Python virtual environment
+source .venv/bin/activate
+```
+
+### 2. Verify connectivity
+```bash
+python test_bedrock.py
+# Expected output: A response from Claude and a token count
+```
+
+### 3. Ingest corpus (one-time)
+```bash
+python -c "from src.ingestion import ingest; count = ingest('documents/'); print(f'Stored {count} chunks')"
+# Expected output: Stored 20 chunks
+```
+
+**If re-ingesting:** Delete the vector database first to avoid duplicates:
+```bash
+rm -rf chroma_db/
+```
+
+### 4. Test the system with gate questions
+
+**Q2 — Tests precedence** (should return $45/day from D4, not $30 from C3):
+```bash
+python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?'))"
+```
+
+**Q3 — Tests hallucination control** (should refuse with informative message - no corpus answer):
+```bash
+python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?'))"
+```
+
+**Q10 — Tests reasoning** (should conclude 200 < 250, no CAT procedures triggered):
+```bash
+python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?'))"
+```
+
+### 5. Check audit trails
+```bash
+ls runs/  # Should show JSON run records from your test queries
+cat evidence/README.md  # Shows execution statistics from 22 baseline runs
+```
+
+**Expected results:**
+- **Q2**: Answer mentions "$45 per day" and "30 days", cites D4 and C3, applies precedence
+- **Q3**: Refuses to answer, lists what was searched and retrieved, no fabrication
+- **Q10**: Concludes "does not trigger catastrophe procedures" with arithmetic reasoning
+
+See `evidence/README.md` for detailed expected outputs.
 
 ## Usage
 
