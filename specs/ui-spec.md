@@ -113,10 +113,26 @@ count check handles it with no special casing.
 
 Single page, top to bottom.
 
-**1. Corpus status** — as above. Collapsed to a single line once loaded.
+**Page title:** "Auto Insurance Policy Agent"
+
+**Description** (below title):
+- "This is an agentic AI system that answers questions using the documents listed below, with specialised agents handling the reasoning."
+- "Note that the corpus is synthetic test data, not real insurance guidance."
+
+**Subheader:** "Corpus used by this app"
+
+**1. Corpus status**
+- Panel header: "Corpus Status"
+- Collapsed by default (`expanded=False`)
+- Success message: "✓ Corpus loaded: {count} documents"
+- Document browser: Each of the 20 documents is expandable to show full content. Click a filename to view the document inline.
+- Re-ingest button at bottom of panel
+- Spinner during initial load: "Loading corpus (first run only)..."
 
 **2. Question input**
+- Label: "Ask a question about your policy:"
 - Text input, full width (Streamlit auto-submits on Enter/blur, no separate Ask button needed)
+- Disabled until corpus is loaded
 - Below it, the three build-target questions as one-click example buttons (vertical layout,
   full question text shown), so a reviewer who does not know the corpus can see the system
   work immediately:
@@ -131,23 +147,23 @@ Single page, top to bottom.
   formatting pass — the UI does not rewrite, summarise, or restyle the answer text.
 - On refusal, the refusal message with the same prominence. A refusal is a result,
   not an error state, and must not be styled as a failure.
+- Spinner during processing: "Processing question..."
 
-**5. Sources** — the documents cited, by `doc_id` and title.
+**5. Sources** — the documents cited, formatted as `doc_id: title`
 
 **6. Trace** — the section that justifies the page existing.
 
-Expandable panels, collapsed by default except Plan and Precedence:
+Expandable panels, with Plan and Precedence expanded by default:
 
-| Panel | Contents |
-|---|---|
-| Plan | `decomposed` true/false, and the sub-questions |
-| Retrievals | One group per sub-question. Each chunk: `doc_id`, score, `effective_date`, `authority_tier` |
-| Attempts | Each attempt: draft, verdict, and reason on rejection |
-| Precedence | Which rule fired, which document won, over which |
-| Failures | Typed entries from `failures[]`, or "none detected" |
+| Panel | Contents | Default State |
+|---|---|---|
+| Plan | `decomposed` true/false, and the sub-questions. When not decomposed: "**Decomposed:** No (direct query)" | Expanded |
+| Retrievals | One group per sub-question. Each chunk: `doc_id`, score, `effective_date`, `authority_tier` | Collapsed |
+| Attempts | Each attempt: draft, verdict, and reason on rejection | Collapsed |
+| Precedence | Which rule fired, which document won, over which | Expanded |
+| Failures | Typed entries from `failures[]`, or "none detected" | Collapsed |
 
-**Precedence expanded by default.** It is the field that shows reasoning rather than
-retrieval, and it is what distinguishes this system's output from the baseline's.
+**Plan and Precedence expanded by default.** Plan shows the visible evidence that decomposition happened; Precedence shows the reasoning that distinguishes this system's output from the baseline's.
 
 ---
 
@@ -192,6 +208,22 @@ This is acceptable: the committed records in `evidence/` are the durable artifac
 
 ---
 
+## Deployment features
+
+The following features are implemented per `specs/deployment-spec.md` for the hosted demo. All three are **skipped when `APP_PASSWORD` is absent from secrets**, so local development is unaffected.
+
+**Password gate** — Renders before any other content. User must enter the shared password before accessing the app. Implemented via `check_password()` and `is_deployment_mode()`.
+
+**Session question cap** — 30-question limit per browser session. When reached, shows error message: "**Session limit reached:** You've asked 30 questions in this session. Click 'Exit Session' below to start a new session." Input is disabled until session is reset.
+
+**Session info sidebar** — Displays question count (e.g., "Questions asked: 3/30") with caption explaining the demo limit.
+
+**Exit Session button** — Located below the question input (after example buttons). Label: "**Exit Session:**" with button text "Reset session count". Resets authentication and question count.
+
+These features exist only for the hosted demo to prevent unbounded AWS spend and public URL exposure. They are inert locally.
+
+---
+
 ## Known limitations
 
 **No document upload.** The pipeline is corpus-agnostic but ingestion is not.
@@ -217,9 +249,6 @@ committed run records that need no credentials at all.
 **Multi-turn chat.** Requires implementing the two memory stubs, adding context to the
 planner and reasoner prompts, exposing context through `run_pipeline`, and session
 state in the UI. The renderer and the untouched pipeline signature make this additive.
-
-**Corpus browser.** Viewing the 20 documents in the UI. They are in the repository and
-readable there.
 
 **Comparison view.** Running the same question through `src/baseline.py` and the full
 pipeline side by side. Genuinely the most compelling demonstration of what the agents

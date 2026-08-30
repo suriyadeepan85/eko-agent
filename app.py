@@ -232,12 +232,38 @@ def render_question_and_answer(record):
 
 
 def render_sources(record):
-    """Display cited documents."""
+    """Display cited documents with title."""
     data = record.to_dict()
     st.header("Sources")
     if data['sources']:
+        # Get chunk metadata to show titles
+        retrievals = data.get('retrievals', [])
+        doc_titles = {}
+        for ret in retrievals:
+            for chunk in ret.get('chunks', []):
+                if chunk['doc_id'] not in doc_titles:
+                    # Extract title from document (read from file)
+                    doc_filename = None
+                    for f in os.listdir("documents"):
+                        if f.startswith(chunk['doc_id']):
+                            doc_filename = f
+                            break
+                    if doc_filename:
+                        doc_path = os.path.join("documents", doc_filename)
+                        with open(doc_path, 'r') as file:
+                            lines = file.readlines()
+                            # Title is typically line 2 (after comment and blank line)
+                            for line in lines:
+                                if line.startswith('# '):
+                                    doc_titles[chunk['doc_id']] = line[2:].strip()
+                                    break
+
         for doc_id in data['sources']:
-            st.text(f"• {doc_id}")
+            title = doc_titles.get(doc_id, '')
+            if title:
+                st.text(f"• {doc_id}: {title}")
+            else:
+                st.text(f"• {doc_id}")
     else:
         st.text("No sources cited")
 
@@ -248,7 +274,7 @@ def render_trace(record):
     st.header("Trace")
 
     # Plan
-    with st.expander("Plan", expanded=False):
+    with st.expander("Plan", expanded=True):
         plan = data['plan']
         if plan.get('decomposed'):
             st.write("**Decomposed:** Yes")
@@ -352,7 +378,7 @@ def render_failures(failures: list):
 # --- MAIN ---
 
 def main():
-    st.set_page_config(page_title="Acme Auto Insurance Agent", layout="wide")
+    st.set_page_config(page_title="Auto Insurance Policy Agent", layout="wide")
 
     # Password gate (deployment mode only) - must be first
     if not check_password():
