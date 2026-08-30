@@ -309,9 +309,8 @@ From 22 pipeline runs:
 ├── runs/                   # Run records (gitignored except runs/evaluation/)
 ├── evidence/               # Summary of execution results
 │   └── README.md           # Statistics and detailed record summaries
-├── docs/                   # Setup documentation
-│   ├── SETUP.md            # Human-readable setup guide
-│   └── setup.sh            # Automated setup script
+├── docs/
+│   └── dev-setup/          # Original development environment runbooks (Windows/WSL/VS Code) - reference only
 └── CLAUDE.md               # Guidance for Claude Code when working in this repo
 ```
 

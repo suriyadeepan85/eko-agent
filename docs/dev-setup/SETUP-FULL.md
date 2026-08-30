@@ -1,5 +1,7 @@
 # SETUP — full manual copy
 
+> **Note:** This documents the original development environment setup (Windows/WSL/VS Code/Claude Code). It is **not required** to run this project. See the root [README.md](../../README.md) for usage instructions.
+
 Every step, in order, no script. Use this when `setup.sh` cannot run — a locked
 down machine, a shell that is not bash, or when you want to watch each step land.
 

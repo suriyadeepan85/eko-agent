@@ -1,5 +1,7 @@
 # SETUP
 
+> **Note:** This documents the original development environment setup (Windows/WSL/VS Code/Claude Code). It is **not required** to run this project. See the root [README.md](../../README.md) for usage instructions.
+
 Local environment for the Enterprise Knowledge Ops Agent.
 Windows → WSL Ubuntu → VS Code, with Claude via Amazon Bedrock.
 No Anthropic subscription or API key is involved anywhere in this path.
