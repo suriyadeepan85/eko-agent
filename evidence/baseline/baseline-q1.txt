@@ -1,0 +1,23 @@
+============================================================
+BASELINE NAIVE RAG
+============================================================
+
+[Retrieval] Querying for: What is the maximum an adjuster can approve today without escalation?
+[Retrieval] Retrieved 4 chunks:
+  - B2-adjuster-assignment-guideline (score: 0.4861)
+  - D3-escalation-matrix (score: 0.4566)
+  - C5-catastrophe-surge-rules (score: 0.4530)
+  - D4-bulletin-2026-04-rental-limit-change (score: 0.4495)
+
+[Generation] Calling Bedrock...
+[Generation] Tokens: {'inputTokens': 1159, 'outputTokens': 100, 'totalTokens': 1259, 'cacheReadInputTokens': 0, 'cacheWriteInputTokens': 0}
+
+============================================================
+ANSWER:
+============================================================
+Based on the provided documents, **an adjuster can approve up to $25,000 without escalation**.
+
+This limit is stated in Document D3-escalation-matrix, which shows that "Payment above adjuster authority ($25,000)" requires escalation to the Claims Manager as the first escalation point.
+
+Any payment exceeding $25,000 would need to be escalated to a Claims Manager, with the Claims Executive serving as the final authority.
+============================================================

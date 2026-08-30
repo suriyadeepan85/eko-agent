@@ -1,0 +1,42 @@
+============================================================
+BASELINE NAIVE RAG
+============================================================
+
+[Retrieval] Querying for: How many days of rental am I covered for and at what rate?
+[Retrieval] Retrieved 5 chunks:
+  - D4-bulletin-2026-04-rental-limit-change (score: 0.5649)
+  - C3-rental-reimbursement-limits (score: 0.5466)
+  - A3-endorsement-rental-coverage (score: 0.4821)
+  - D1-customer-faq (score: 0.4761)
+  - A2-commercial-fleet-policy (score: 0.4407)
+
+[Generation] Calling Bedrock...
+[Generation] Tokens: {'inputTokens': 1456, 'outputTokens': 250, 'totalTokens': 1706, 'cacheReadInputTokens': 0, 'cacheWriteInputTokens': 0}
+
+============================================================
+ANSWER:
+============================================================
+Based on the documents provided, the answer depends on your policy type and the date of your loss:
+
+## For Personal Auto Policies with Endorsement ACME-END-RR:
+
+**For losses on or after May 1, 2026:**
+- **$45 per day**
+- **30 days maximum** per loss
+- **$1,350 maximum** per loss
+
+**For losses before May 1, 2026:**
+- **$30 per day**
+- **30 days maximum** per loss
+- **$900 maximum** per loss
+
+The actual reimbursement is the lesser of your actual daily rental charge or the per-day maximum.
+
+## For Commercial Fleet Policies:
+
+Fleet vehicles don't use rental reimbursement. Instead, they have **downtime reimbursement** which covers:
+- **$75 per day**
+- **45 days maximum**
+
+**Note:** To confirm whether you have rental coverage, check your policy declarations page or contact your adjuster. Rental coverage only applies if you have the rental reimbursement endorsement attached to your policy.
+============================================================

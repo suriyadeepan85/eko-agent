@@ -1,0 +1,25 @@
+============================================================
+BASELINE NAIVE RAG
+============================================================
+
+[Retrieval] Querying for: After my car is repaired, do you pay me for the lost resale value?
+[Retrieval] Retrieved 3 chunks:
+  - B4-total-loss-valuation-procedure-2023 (score: 0.5019)
+  - B3-total-loss-valuation-procedure (score: 0.4894)
+  - D1-customer-faq (score: 0.4447)
+
+[Generation] Calling Bedrock...
+[Generation] Tokens: {'inputTokens': 834, 'outputTokens': 122, 'totalTokens': 956, 'cacheReadInputTokens': 0, 'cacheWriteInputTokens': 0}
+
+============================================================
+ANSWER:
+============================================================
+Based on the provided documents, I cannot answer your question about compensation for lost resale value (also known as diminished value) after your car is repaired.
+
+The documents provided cover:
+- Total loss valuation procedures
+- Settlement calculations for total loss claims
+- General claim FAQs about deductibles, repair shops, and rental cars
+
+However, none of these documents address diminished value claims or compensation for reduced resale value after repairs are completed. You would need to contact your insurance company directly or review other policy documents to get information about diminished value coverage.
+============================================================

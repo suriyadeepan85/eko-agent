@@ -1,0 +1,20 @@
+============================================================
+BASELINE NAIVE RAG
+============================================================
+
+[Retrieval] Querying for: A hailstorm damaged 200 cars in one county. How does that change handling?
+[Retrieval] Retrieved 1 chunks:
+  - C5-catastrophe-surge-rules (score: 0.4836)
+
+[Generation] Calling Bedrock...
+[Generation] Tokens: {'inputTokens': 318, 'outputTokens': 139, 'totalTokens': 457, 'cacheReadInputTokens': 0, 'cacheWriteInputTokens': 0}
+
+============================================================
+ANSWER:
+============================================================
+Based on the document provided, **a hailstorm that damaged 200 cars would not change the handling procedures**.
+
+According to the Catastrophe Surge Operating Rules, a catastrophe (CAT) event is only declared when a single weather event is expected to generate **more than 250 claims** in a defined geography. Since this hailstorm damaged 200 cars (which is below the 250-claim threshold), it would not meet the criteria for a CAT declaration.
+
+Therefore, claims from this hailstorm would continue to be handled under normal operating procedures and contact standards, rather than the modified CAT handling rules.
+============================================================
