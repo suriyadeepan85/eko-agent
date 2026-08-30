@@ -60,11 +60,18 @@ python test_bedrock.py  # Should return a response and token count
    - Demonstrates what simple RAG gets right (LLM reasoning) and lacks (audit trail, systematic handling)
    - **Status**: Complete, useful for comparison
 
+5. **Agent Pipeline** ([src/agents/](src/agents/)) ✅
+   - **Planner**: LLM-based query decomposition
+   - **Retriever**: Calls retrieval module per sub-question
+   - **Pooling**: Deduplicates chunks across retrievals
+   - **Reasoner**: LLM-based answer generation with precedence rules
+   - **Validator**: Stateless claim-by-claim grounding check
+   - **Orchestrator**: Main coordinator with retry mechanism (max 2 attempts)
+   - **Status**: Complete, all 3 gate tests passed
+
 ### Not Yet Implemented
 
-- **Reasoning/Validation layer**: Apply precedence rules, validate claims
-- **Orchestrator**: Multi-step agent coordination
-- **Full agentic pipeline**: Per `specs/agent-spec.md`
+- **Memory**: Multi-turn conversation context (interface exists, implementation deferred)
 
 ## Critical Design Constraints
 
@@ -133,6 +140,11 @@ python -c "from src.run_record import RunRecord; from src.retrieval import query
 python -m src.baseline "How many days of rental am I covered for and at what rate?"
 python -m src.baseline "After my car is repaired, do you pay me for the lost resale value?"
 python -m src.baseline "What is the total loss threshold?"
+
+# Agent Pipeline (full multi-agent system)
+python -c "from src.agents import run_pipeline; answer = run_pipeline('How many days of rental am I covered for and at what rate?'); print(answer)"
+python -c "from src.agents import run_pipeline; answer = run_pipeline('After my car is repaired, do you pay me for the lost resale value?'); print(answer)"
+python -c "from src.agents import run_pipeline; answer = run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?'); print(answer)"
 ```
 
 ### Dependencies
