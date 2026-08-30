@@ -204,6 +204,36 @@ query to the test set.
 
 ---
 
+## RunRecord Class Interface
+
+**Write-only from agents' perspective** (per design constraint above), but provides
+read access for UI and CLI:
+
+**Write methods** (called by orchestrator during pipeline execution):
+- `add_plan(decomposed, sub_questions)`
+- `add_retrieval(sub_question, k, filters, chunks)`
+- `add_pooled_chunks(doc_ids)`
+- `add_attempt(attempt_num, draft, claims, verdict, reason)`
+- `add_precedence(rule, winner, over)`
+- `set_answer(answer)`
+- `add_sources(doc_ids)`
+- `add_failure(failure_type, details)`
+- `flush()` — writes complete record to JSON file
+
+**Read methods** (for UI, CLI, testing):
+- `to_dict() -> dict` — returns complete record as dictionary with all trace data
+- `answer` property — convenience accessor for `record['answer']`
+- `print_summary()` — console output (human-readable, not for parsing)
+
+**Usage in UI:**
+```python
+record = run_pipeline(question)
+answer = record.answer              # Get final answer
+trace = record.to_dict()            # Get complete trace for display
+```
+
+---
+
 ## Done-criteria
 
 1. Asking one question produces exactly one JSON file in `runs/`.

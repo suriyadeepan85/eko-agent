@@ -10,7 +10,7 @@ from . import planner, pooling, reasoner, validator, memory
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
-def run_pipeline(question: str, project_root: str = ".") -> str:
+def run_pipeline(question: str, project_root: str = ".") -> 'RunRecord':
     """Execute full agent pipeline.
 
     Args:
@@ -18,7 +18,7 @@ def run_pipeline(question: str, project_root: str = ".") -> str:
         project_root: Project root for run records
 
     Returns:
-        Final answer or informative refusal
+        RunRecord with complete trace and final answer
     """
     record = RunRecord(question, project_root)
 
@@ -42,9 +42,10 @@ def run_pipeline(question: str, project_root: str = ".") -> str:
     total_chunks = sum(len(chunks) for _, chunks in retrievals)
     if total_chunks == 0:
         record.add_failure('insufficient_retrieval')
+        record.set_answer("No relevant documents found for this question.")
         record.print_summary()
         record.flush()
-        return "No relevant documents found for this question."
+        return record
 
     # Step 3: Pool
     pooled = pooling.pool_chunks(retrievals)
@@ -96,7 +97,7 @@ def run_pipeline(question: str, project_root: str = ".") -> str:
                 record.add_sources(cited_docs)
                 record.print_summary()
                 record.flush()
-                return reason_result['draft']
+                return record
 
             # Rejected - prepare for retry
             rejection_reasons.append(val_result['reason'])
@@ -134,4 +135,4 @@ The retrieved documents do not contain sufficient information to answer your que
     record.print_summary()
     record.flush()
 
-    return refusal
+    return record

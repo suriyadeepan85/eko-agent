@@ -23,6 +23,12 @@ The **orchestrator** is not an agent. It is plain Python: it calls the agents in
 sequence, enforces the retry cap, and accumulates the run record. No LLM call, no
 prompt.
 
+**Interface:** `run_pipeline(question: str, project_root: str = ".") -> RunRecord`
+- Returns a `RunRecord` object containing the complete trace and final answer
+- Access answer via `record.answer` property
+- Access full trace data via `record.to_dict()` method
+- Also writes to `runs/{timestamp}_{slug}.json` for persistence
+
 ---
 
 ## Why an LLM for planner, reasoner and validator
@@ -182,6 +188,21 @@ would simply be untrue. This is US4's alignment criterion.
 ---
 
 ## Scoped out
+
+**Memory is a stub.** `get_context()` returns an empty list and `add_turn()` is a
+no-op. The `context` parameter is threaded through `plan()` and `reason()` but is
+not injected into either prompt — so even a working memory store would be invisible
+to the model until the prompts are updated.
+
+The system is single-turn only. The multi-turn behaviour described under Memory
+access above is the intended design, not the current state.
+
+To enable it: implement the two memory functions, add context to the planner and
+reasoner prompts, and expose context through `run_pipeline`. The validator must
+remain stateless.
+
+Within-turn memory does work: `prior_attempt` carries the rejected draft and reason
+back to the reasoner on retry, and is deliberately withheld from the validator.
 
 **Improvement 1 — retrieve-then-plan-then-retrieve.** A cheap first retrieval on
 the raw question, so the planner decomposes knowing what the corpus actually

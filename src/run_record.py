@@ -132,6 +132,19 @@ class RunRecord:
             json.dump(self.record, f, indent=2)
         logging.info(f"Run record written to {self.filepath}")
 
+    def to_dict(self) -> dict:
+        """Return the complete record as a dictionary.
+
+        Returns:
+            Copy of the internal record dict with all trace data
+        """
+        return self.record.copy()
+
+    @property
+    def answer(self) -> str:
+        """Get the final answer."""
+        return self.record['answer']
+
     def print_summary(self):
         """Print human-readable summary to console."""
         print(f"\n{'=' * 60}")

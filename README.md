@@ -191,17 +191,17 @@ rm -rf chroma_db/
 
 **Q2 — Tests precedence** (should return $45/day from D4, not $30 from C3):
 ```bash
-python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?').answer)"
 ```
 
 **Q3 — Tests hallucination control** (should refuse with informative message - no corpus answer):
 ```bash
-python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?').answer)"
 ```
 
 **Q10 — Tests reasoning** (should conclude 200 < 250, no CAT procedures triggered):
 ```bash
-python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?').answer)"
 ```
 
 ### 5. Check audit trails
@@ -224,20 +224,45 @@ See `evidence/README.md` for detailed expected outputs.
 **Recommended** - Complete multi-agent system with validation and audit trails:
 
 ```bash
-python -c "from src.agents import run_pipeline; answer = run_pipeline('How many days of rental am I covered for and at what rate?'); print(answer)"
+python -c "from src.agents import run_pipeline; record = run_pipeline('How many days of rental am I covered for and at what rate?'); print(record.answer)"
 ```
 
 **Example questions:**
 ```bash
 # Q2: Rental limits (tests precedence - D4 over C3)
-python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('How many days of rental am I covered for and at what rate?').answer)"
 
 # Q3: Diminished value (tests hallucination control)
-python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('After my car is repaired, do you pay me for the lost resale value?').answer)"
 
 # Q10: Hailstorm arithmetic (tests reasoning)
-python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?'))"
+python -c "from src.agents import run_pipeline; print(run_pipeline('We had a hailstorm damage 200 cars in our fleet. Does that trigger catastrophe procedures?').answer)"
 ```
+
+### Streamlit UI (Visual Trace)
+
+**Interactive web interface** - displays complete agent coordination trace:
+
+```bash
+streamlit run app.py
+```
+
+Opens browser at http://localhost:8501
+
+**Features:**
+- Auto-loads corpus on first run (20 documents)
+- One-click example questions
+- Complete trace visualization:
+  - Plan (decomposition)
+  - Retrievals (scores, metadata)
+  - Attempts (drafts, verdicts, claims)
+  - Precedence rules (expanded by default)
+  - Failures
+- Same prominence for answers and refusals (not styled as errors)
+- Similarity scores displayed with floor value (0.44)
+- Creates run records in `runs/` (identical to CLI)
+
+Per `specs/ui-spec.md`, this is **display work only** - no LLM calls, no logic, just rendering what the orchestrator produces. The interesting output is the trace that distinguishes this system from single-pass RAG.
 
 ### Baseline RAG (Comparison)
 
@@ -283,13 +308,15 @@ From 22 pipeline runs:
 
 ```
 .
+├── app.py                  # Streamlit UI - visual trace display
 ├── documents/              # 20 synthetic corpus documents (A1-A5, B1-B5, C1-C5, D1-D5)
 ├── reference/              # Corpus map, question traces (NOT ingested)
 ├── specs/                  # Implementation specifications
 │   ├── ingestion-spec.md   # Chunking, metadata extraction
 │   ├── retrieval-spec.md   # Vector search, similarity scoring
 │   ├── run-record.md       # Audit trail format
-│   └── agent-spec.md       # Agent roles, orchestration, precedence rules
+│   ├── agent-spec.md       # Agent roles, orchestration, precedence rules
+│   └── ui-spec.md          # Streamlit UI design and requirements
 ├── src/
 │   ├── ingestion.py        # Load documents into ChromaDB
 │   ├── retrieval.py        # Vector search with similarity floor
