@@ -146,8 +146,8 @@ ok "activated — $(python --version)"
 
 say "F3  Python dependencies"
 python -m pip install --quiet --upgrade pip
-python -m pip install --quiet boto3 chromadb
-ok "boto3 + chromadb installed"
+python -m pip install --quiet -r requirements.txt
+ok "Dependencies installed (streamlit, boto3, chromadb)"
 
 # --------------------------------------------------------- F5: gitignore ----
 say "F5  .gitignore"

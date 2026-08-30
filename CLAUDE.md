@@ -150,7 +150,8 @@ python -c "from src.agents import run_pipeline; answer = run_pipeline('We had a 
 ### Dependencies
 ```bash
 pip install --upgrade pip
-pip install boto3 chromadb
+pip install -r requirements.txt
+# Installs: streamlit, boto3, chromadb
 ```
 
 ### ChromaDB operations

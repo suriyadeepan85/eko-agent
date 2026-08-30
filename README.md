@@ -142,20 +142,26 @@ From `reference/CORPUS-MAP.md`:
 **Prerequisites:**
 - Python 3.11+
 - AWS account with Bedrock access (Claude Sonnet 4.5)
-- WSL Ubuntu (if on Windows)
+- AWS credentials configured (via `~/.aws/credentials`, environment variables, or IAM role)
 
-**See [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md)** for the original development environment setup (Windows/WSL/VS Code/Claude Code) - optional reference only.
-
-**First-time setup:**
+**Quick Setup:**
 ```bash
-# From project root
-chmod +x docs/dev-setup/setup.sh
-./docs/dev-setup/setup.sh
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate
 
-# The script creates .venv/ and sets environment variables in ~/.bashrc
-# Open a new terminal OR reload the shell:
-source ~/.bashrc
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables (optional - defaults to us-east-1 and Claude Sonnet 4.5)
+export AWS_REGION=us-east-1
+export ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0
+
+# Test connectivity
+python test_bedrock.py
 ```
+
+**Alternative:** See [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md) for the original development environment setup with automated script (Windows/WSL/VS Code/Claude Code) - reference only.
 
 ## Quick Start for Evaluators
 
