@@ -2,9 +2,9 @@
 Validator agent - stateless LLM-based claim verification.
 """
 
-import boto3
 import json
 import logging
+from ..aws_client import get_bedrock_client, get_model_id
 
 
 def validate(draft: str, claims: list[dict], chunks: list[dict]) -> dict:
@@ -61,9 +61,9 @@ OR
 
 Accept if ALL claims are supported. Reject if ANY claim is unsupported or cites wrong documents."""
 
-    client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    client = get_bedrock_client()
     response = client.converse(
-        modelId="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        modelId=get_model_id(),
         messages=[{"role": "user", "content": [{"text": prompt}]}],
         inferenceConfig={"maxTokens": 500}
     )

@@ -264,6 +264,24 @@ Opens browser at http://localhost:8501
 
 Per `specs/ui-spec.md`, this is **display work only** - no LLM calls, no logic, just rendering what the orchestrator produces. The interesting output is the trace that distinguishes this system from single-pass RAG.
 
+**Deployment to Streamlit Cloud:**
+
+The app supports deployment to Streamlit Cloud with AWS credentials configured via secrets:
+
+1. Deploy app to Streamlit Cloud (connect GitHub repo)
+2. In App settings → Secrets, paste:
+   ```toml
+   AWS_ACCESS_KEY_ID = "your-access-key-id"
+   AWS_SECRET_ACCESS_KEY = "your-secret-access-key"
+   AWS_REGION = "us-east-1"
+   BEDROCK_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+   ```
+3. Save and redeploy
+
+See `.streamlit/secrets.toml.example` for template.
+
+**Local development:** Works with AWS credential chain (IAM roles, `~/.aws/credentials`, environment variables) - no secrets.toml needed.
+
 ### Baseline RAG (Comparison)
 
 **Simple single-pass RAG** - no validation, precedence, or retry:

@@ -2,9 +2,9 @@
 Planner agent - LLM-based query decomposition.
 """
 
-import boto3
 import json
 import logging
+from ..aws_client import get_bedrock_client, get_model_id
 
 
 def plan(question: str, context: list[dict]) -> dict:
@@ -36,9 +36,9 @@ IMPORTANT: Respond with ONLY a JSON object, no other text before or after.
 JSON format:
 {{"decomposed": true/false, "sub_questions": ["..."]}}"""
 
-    client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    client = get_bedrock_client()
     response = client.converse(
-        modelId="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        modelId=get_model_id(),
         messages=[{"role": "user", "content": [{"text": prompt}]}],
         inferenceConfig={"maxTokens": 500}
     )

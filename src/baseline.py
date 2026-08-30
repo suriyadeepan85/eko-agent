@@ -53,8 +53,8 @@ systematic failure handling.
 """
 
 import sys
-import boto3
 from . import retrieval
+from .aws_client import get_bedrock_client, get_model_id
 
 
 def baseline_rag(question: str, k: int = 5, max_tokens: int = 500) -> str:
@@ -97,10 +97,10 @@ Answer:"""
 
     # Step 3: Generate answer (single call, no retry)
     print(f"\n[Generation] Calling Bedrock...")
-    client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    client = get_bedrock_client()
 
     response = client.converse(
-        modelId="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        modelId=get_model_id(),
         messages=[{"role": "user", "content": [{"text": prompt}]}],
         inferenceConfig={"maxTokens": max_tokens},
     )

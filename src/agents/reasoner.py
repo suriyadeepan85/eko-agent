@@ -2,9 +2,9 @@
 Reasoner agent - LLM-based answer generation with precedence rules.
 """
 
-import boto3
 import json
 import logging
+from ..aws_client import get_bedrock_client, get_model_id
 
 
 def reason(question: str, chunks: list[dict], context: list[dict],
@@ -68,9 +68,9 @@ JSON format:
 
 Each claim must cite its source documents. The precedence array can be empty [] if no conflicts."""
 
-    client = boto3.client("bedrock-runtime", region_name="us-east-1")
+    client = get_bedrock_client()
     response = client.converse(
-        modelId="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        modelId=get_model_id(),
         messages=[{"role": "user", "content": [{"text": prompt}]}],
         inferenceConfig={"maxTokens": 1000}
     )
