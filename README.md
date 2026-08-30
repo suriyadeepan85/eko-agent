@@ -31,12 +31,64 @@ The corpus contains **6 deliberate traps** (version conflicts, supersessions, ne
 
 ### Flow
 
+```mermaid
+flowchart TB
+    subgraph Orchestrator["🔄 Orchestrator (Python - coordinates flow, enforces retry cap)"]
+        Question[/"📝 Question"/]
+        
+        Memory[("💾 Memory\n(conversation context)")]
+        Chroma[("🗄️ ChromaDB\n(20 documents,\nvector embeddings)")]
+        
+        Planner["🧠 Planner (LLM)\nDecompose into\nsub-questions"]
+        Retriever["🔍 Retriever\n(Deterministic)\nVector search\nk=5 per sub-q"]
+        Pooler["🔀 Pooler\n(Deterministic)\nDeduplicate chunks\nby doc_id"]
+        Reasoner["🤔 Reasoner (LLM)\nGenerate answer\nApply precedence\nCite sources"]
+        Validator["✅ Validator (LLM)\nStateless\nVerify claims\ngrounded in chunks"]
+        
+        Answer[\"💬 Answer\n(or informative refusal)"/]
+        RunRecord[\"📊 Run Record\n(audit trail in runs/)"/]
+        
+        Question --> Planner
+        Memory -.-> Planner
+        Memory -.-> Reasoner
+        
+        Planner --> Retriever
+        Chroma -.-> Retriever
+        Retriever --> Pooler
+        Pooler --> Reasoner
+        
+        Reasoner --> Validator
+        
+        Validator -->|"❌ rejected\n(+ reason)"| Reasoner
+        Validator -->|"✓ accepted"| Answer
+        
+        Reasoner -.->|"max 2 attempts\nthen refusal"| Answer
+        
+        Answer --> RunRecord
+        Reasoner -.-> RunRecord
+        Validator -.-> RunRecord
+    end
+    
+    style Planner fill:#e1f5ff
+    style Reasoner fill:#e1f5ff
+    style Validator fill:#e1f5ff
+    style Retriever fill:#f0f0f0
+    style Pooler fill:#f0f0f0
+    style Memory fill:#fff4e1
+    style Chroma fill:#fff4e1
+    style Answer fill:#e8f5e9
+    style RunRecord fill:#e8f5e9
+    style Orchestrator fill:#fafafa,stroke:#333,stroke-width:3px
 ```
-Question → Planner → Retriever (per sub-q) → Pooling → Reasoner → Validator
-                                                          ↑           ↓
-                                                          └─ retry ──┘
-                                                         (max 2 attempts)
-```
+
+**Legend:**
+- 🧠 **Blue boxes** = LLM agents (Planner, Reasoner, Validator)
+- **Gray boxes** = Deterministic components (Retriever, Pooler)
+- 💾 **Yellow** = Data stores (Memory, ChromaDB)
+- 💬 **Green** = Outputs (Answer, Run Record)
+- **Solid arrows** = Main flow
+- **Dashed arrows** = Data access
+- **Retry loop** = Validator → Reasoner (max 2 attempts)
 
 **Why LLMs for three agents:**
 - **Planner**: Recognizing "how many days and at what rate" is two questions requires language understanding
