@@ -144,17 +144,13 @@ From `reference/CORPUS-MAP.md`:
 - AWS account with Bedrock access (Claude Sonnet 4.5)
 - WSL Ubuntu (if on Windows)
 
-**See [docs/SETUP.md](docs/SETUP.md)** for complete setup including:
-- WSL installation
-- AWS Bedrock configuration
-- Python environment setup
-- Automated script: `docs/setup.sh`
+**See [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md)** for the original development environment setup (Windows/WSL/VS Code/Claude Code) - optional reference only.
 
 **First-time setup:**
 ```bash
 # From project root
-chmod +x docs/setup.sh
-./docs/setup.sh
+chmod +x docs/dev-setup/setup.sh
+./docs/dev-setup/setup.sh
 
 # The script creates .venv/ and sets environment variables in ~/.bashrc
 # Open a new terminal OR reload the shell:
@@ -163,7 +159,7 @@ source ~/.bashrc
 
 ## Quick Start for Evaluators
 
-**After completing setup** (see [docs/SETUP.md](docs/SETUP.md)):
+**After completing setup** (see [docs/dev-setup/SETUP.md](docs/dev-setup/SETUP.md) for details):
 
 ### 1. Load environment
 ```bash
@@ -377,6 +373,6 @@ Synthetic test data only. Do not reuse corpus content as insurance guidance.
 - **Corpus design**: `reference/START-HERE.md`, `reference/CORPUS-MAP.md`
 - **Test questions**: `reference/QUESTIONS-AND-TRACES.md`
 - **Implementation specs**: `specs/*.md`
-- **Setup guide**: `docs/SETUP.md`
+- **Setup guide**: `docs/dev-setup/SETUP.md`
 - **Execution evidence**: `evidence/README.md`
 - **Claude Code guidance**: `CLAUDE.md`

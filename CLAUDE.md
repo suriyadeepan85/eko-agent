@@ -10,13 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment
 
-- **Python**: 3.14+ with virtual environment at `.venv/`
+- **Python**: 3.11+ with virtual environment at `.venv/`
 - **Backend**: AWS Bedrock (us-east-1) — no Anthropic API key used
 - **Model**: Claude Sonnet 4.5 (us.anthropic.claude-sonnet-4-5-20250929-v1:0)
 - **Vector store**: ChromaDB with persistent storage at `./chroma_db/`
 
 ### Required environment variables
-Set in `~/.bashrc` (see `docs/setup.sh`):
+Set in `~/.bashrc` (see `docs/dev-setup/setup.sh`):
 - `CLAUDE_CODE_USE_BEDROCK=1`
 - `AWS_REGION=us-east-1`
 - `ANTHROPIC_MODEL=us.anthropic.claude-sonnet-4-5-20250929-v1:0`
@@ -173,9 +173,8 @@ reference/          Corpus map, 10 questions + traces, NOT for ingestion
 specs/              Implementation specifications
   ingestion-spec.md Chunking, metadata extraction, storage
   retrieval-spec.md Query interface, scoring, failure signals
-docs/               Setup documentation
-  SETUP.md          Environment setup (WSL + Bedrock + Claude Code)
-  setup.sh          Automated setup script
+docs/
+  dev-setup/        Original development environment runbooks (Windows/WSL/VS Code)
 src/                Implementation (empty — to be built)
 test_bedrock.py     AWS Bedrock connectivity test
 ```
@@ -230,7 +229,7 @@ From `reference/START-HERE.md`:
 
 ## Cost Context
 
-Running on a personal AWS account. From `docs/SETUP.md`:
+Running on a personal AWS account. From `docs/dev-setup/SETUP.md`:
 - Budget: $25/month with alerts at 80% and 100%
 - Synthetic data only — no real business content until migrated to company account
 
