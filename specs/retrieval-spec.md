@@ -83,28 +83,38 @@ A failure there would be evidence to raise k, rather than a guess.
 
 ## Similarity floor
 
-Vector search has no concept of "no result". It returns nearest neighbours
-regardless of whether anything is actually close. Ask about diminished value —
-which appears nowhere in the corpus — and it will still return five chunks.
+## Similarity floor
 
-A floor is therefore required for Q3. Chunks that do not clear it are dropped; if
-nothing clears it, `query` returns an empty list and the caller reports
-insufficient retrieval rather than reasoning over noise.
+Vector search has no concept of "no result" — it returns nearest neighbours
+regardless of whether anything is actually close. The floor was designed to
+detect unanswerable questions (Q3).
 
-**Decision:** placeholder `0.0` (no filtering) for the first build. The threshold
-cannot be reasoned to — it must be measured against this corpus and this
-embedding function.
+**Measured, and it does not work for that purpose.**
 
-Procedure once retrieval runs:
+### Observed scores
 
-1. Run the Q3 question ("after my car is repaired, do you pay me for the lost
-   resale value?") and record the best score.
-2. Run Q2 and Q10 and record their best scores.
-3. Set the floor between them, closer to the Q3 end.
+| Question | Best score | Notes |
+|---|---|---|
+| Q3 diminished value (unanswerable) | 0.5005 | Highest of the three |
+| Q7 total loss threshold (answerable) | 0.4497–0.4633 | Lower than the unanswerable one |
 
-Record the observed scores here when the floor is set. A threshold with no
-recorded basis is a magic number, and future-you will not know whether it is safe
-to change.
+Conversion: `1 / (1 + distance)`, giving a 0–1 range.
+
+No threshold separates them. Any floor above 0.4633 rejects Q7; any floor below
+0.5005 admits Q3.
+
+**Why.** Whole-document chunks are dense with insurance vocabulary, so a question
+about diminished value is topically close to several documents even though none
+answers it. A short query against long documents dilutes the match. Vector
+distance measures topical similarity, not whether an answer is present.
+
+**Decision:** floor set to `0.44` — low enough to preserve every answerable query,
+high enough to drop genuinely poor matches. It is a garbage filter, not an
+answerability test.
+
+**Consequence:** unanswerable detection moves to the reasoning/validation layer.
+The check becomes "do any retrieved chunks actually address this question?" —
+a judgment the model must make, not a threshold.
 
 ### Observed scores
 
