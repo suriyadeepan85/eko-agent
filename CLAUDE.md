@@ -33,23 +33,38 @@ python test_bedrock.py  # Should return a response and token count
 
 ## Architecture
 
-The system has three layers (not yet built):
+### Implemented Modules
 
-1. **Ingestion** (`specs/ingestion-spec.md`)
-   - Load 20 documents from `documents/`
+1. **Ingestion** ([src/ingestion.py](src/ingestion.py)) ✅
+   - Loads 20 documents from `documents/`
    - One chunk per document (no splitting)
-   - Extract metadata: `doc_id`, `title`, `effective_date`, `authority_tier`, `form`
-   - Store in ChromaDB collection `acme_auto_corpus`
+   - Extracts metadata: `doc_id`, `title`, `effective_date`, `authority_tier`, `form`
+   - Stores in ChromaDB collection `acme_auto_corpus`
+   - **Status**: Complete, 20 chunks ingested
 
-2. **Retrieval** (`specs/retrieval-spec.md`)
-   - Vector search with similarity floor to detect unanswerable questions
-   - Return chunks with metadata + relevance scores
-   - Does NOT resolve conflicts — surfaces all candidates (e.g., both stale and current docs)
+2. **Retrieval** ([src/retrieval.py](src/retrieval.py)) ✅
+   - Vector search with similarity floor (0.44) to filter poor matches
+   - Returns chunks with metadata + similarity scores (higher = better)
+   - Surfaces ALL candidates (C3 AND D4, B3 AND B4 AND A4)
+   - **Status**: Complete, all 6 done-criteria met
 
-3. **Reasoning/Validation** (not yet specified)
-   - Apply precedence rules to resolve conflicts
-   - Detect insufficient retrieval
-   - Generate responses with verification
+3. **Run Record** ([src/run_record.py](src/run_record.py)) ✅
+   - Write-only audit trail for each question
+   - Tracks retrievals, attempts, precedence, failures
+   - JSON files in `/runs/` + console summaries
+   - **Status**: Complete, tested with Q2 and Q3
+
+4. **Baseline RAG** ([src/baseline.py](src/baseline.py)) ✅
+   - Naive single-pass retrieval + generation
+   - No validation, precedence, retry, or decomposition
+   - Demonstrates what simple RAG gets right (LLM reasoning) and lacks (audit trail, systematic handling)
+   - **Status**: Complete, useful for comparison
+
+### Not Yet Implemented
+
+- **Reasoning/Validation layer**: Apply precedence rules, validate claims
+- **Orchestrator**: Multi-step agent coordination
+- **Full agentic pipeline**: Per `specs/agent-spec.md`
 
 ## Critical Design Constraints
 
@@ -105,8 +120,19 @@ Three questions must work correctly (see `reference/QUESTIONS-AND-TRACES.md`):
 # Connectivity test
 python test_bedrock.py
 
-# Ingestion verification (once built)
-# Should return 20, print all filenames, populate all metadata
+# Ingestion
+python -c "from src.ingestion import ingest; count = ingest('documents/'); print(f'Stored {count} chunks')"
+
+# Retrieval test (Q2)
+python -c "from src.retrieval import query; results = query('how many days of rental am I covered for and at what rate', k=5); print(f'Found {len(results)} chunks'); [print(f\"  {r['doc_id']}: {r['score']:.4f}\") for r in results]"
+
+# Run record test
+python -c "from src.run_record import RunRecord; from src.retrieval import query; r = RunRecord('Test question'); r.add_plan(False); chunks = query('rental days', k=5); r.add_retrieval('Test', 5, None, chunks); r.print_summary()"
+
+# Baseline RAG (naive single-pass)
+python -m src.baseline "How many days of rental am I covered for and at what rate?"
+python -m src.baseline "After my car is repaired, do you pay me for the lost resale value?"
+python -m src.baseline "What is the total loss threshold?"
 ```
 
 ### Dependencies
